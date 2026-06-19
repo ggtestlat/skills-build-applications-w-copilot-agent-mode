@@ -1,6 +1,6 @@
 import express, { Express, Request, Response } from 'express';
-import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import { connectDatabase } from './database';
 
 // Import routes
 import usersRouter from './routes/users';
@@ -13,10 +13,7 @@ dotenv.config();
 
 const app: Express = express();
 const PORT = process.env.BACKEND_PORT || 8000;
-
-// Get MongoDB URI - use octofit_db database
 const codespaceName = process.env.CODESPACE_NAME;
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/octofit_db';
 
 // Middleware
 app.use(express.json());
@@ -30,13 +27,11 @@ app.use((req: Request, res: Response, next) => {
   next();
 });
 
-// MongoDB Connection
-mongoose.connect(MONGODB_URI)
-  .then(() => {
-    console.log('✅ Connected to MongoDB');
-    console.log(`📦 Database: ${MONGODB_URI}`);
-  })
-  .catch((err) => console.error('❌ MongoDB connection error:', err));
+// Connect to MongoDB
+connectDatabase().catch((err) => {
+  console.error('Failed to connect to database:', err);
+  process.exit(1);
+});
 
 // Health check route
 app.get('/api/health', (req: Request, res: Response) => {
